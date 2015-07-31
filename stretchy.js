@@ -68,14 +68,35 @@ var _ = self.Stretchy = {
 			else if (cs.boxSizing == "padding-box") {
 				offset = element.clientWidth;
 			}
-
+            
 			// Safari misreports scrollWidth, so we will instead set scrollLeft to a
 			// huge number, and read that back to see what it was clipped to
 			element.scrollLeft = 1e+10;
+            
+			if (element.scrollLeft !== 0) {
+				var width = Math.max(element.scrollLeft + offset, element.scrollWidth - element.clientWidth);
+				element.style.width = width + "px";
+			} else {
+				// calculate the width against a dummy single row textarea too as 
+				// scrollLeft is always 0 for IE9-11 + MS Edge
+				var dummy = document.createElement("textarea");
+				dummy.id = "stretchy-dummy";
+				dummy.placeholder = element.placeholder;
+				dummy.rows = 1;
+				dummy.style.left = "-9999px";
+				dummy.style.position = "absolute";
+				dummy.style.width = 0;
+				dummy.style.whiteSpace = "nowrap";
+				dummy.value = element.value;
 
-			var width = Math.max(element.scrollLeft + offset, element.scrollWidth - element.clientWidth);
+				document.body.appendChild(dummy);
 
-			element.style.width = width + "px";
+				element.style.width = dummy.scrollWidth + offset + "px";
+
+				document.body.removeChild(dummy);
+
+			}
+
 		}
 		else if (type == "select") {
 			// Need to use dummy element to measure :(
